@@ -65,7 +65,7 @@ services:
   # aux noms dans github.event.repository.name pour que la CI fonctionne.
   
   jobmate-auth:
-    image: ghcr.io/TheJobMateCompany/jobmate-auth:latest
+    image: ghcr.io/thejobmatecompany/jobmate-auth:latest
     container_name: auth-service
     networks:
       - jobmate-internal
@@ -75,7 +75,7 @@ services:
     restart: always
 
   jobmate-discovery:
-    image: ghcr.io/TheJobMateCompany/jobmate-discovery:latest
+    image: ghcr.io/thejobmatecompany/jobmate-discovery:latest
     container_name: discovery-service
     networks:
       - jobmate-internal
@@ -84,7 +84,7 @@ services:
     restart: always
 
   jobmate-gateway:
-    image: ghcr.io/TheJobMateCompany/jobmate-gateway:latest
+    image: ghcr.io/thejobmatecompany/jobmate-gateway:latest
     container_name: gateway
     networks:
       - jobmate-internal
