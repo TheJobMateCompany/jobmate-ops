@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: 
+      context: ./jobmate-auth # Chemin relatif vers ton dossier cloné
+      dockerfile: Dockerfile
+    ports:
+      - "50051:50051"
+    volumes:
+      - ./jobmate-auth:/app
+      # Astuce : on monte le proto local pour que le conteneur voie les changements sans rebuild
+      - ./jobmate-auth/proto:/app/proto 
+
+  discovery-service:
+    build:
+      context: ./jobmate-discovery
+      dockerfile: Dockerfile
+    ports:
+      - "50052:50052"
+    volumes:
+      - ./jobmate-discovery:/app

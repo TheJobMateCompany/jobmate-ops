@@ -1,0 +1,104 @@
+version: '3.8'
+
+networks:
+  jobmate-internal:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  traefik_letsencrypt:
+
+services:
+  # --- INFRA ---
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Redirection HTTP -> HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # Configuration SSL (Let's Encrypt)
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      # Remplace par ton email !
+      - "--certificatesresolvers.myresolver.acme.email=admin@jobmate.app"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - jobmate-internal
+    restart: always
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: jobmate
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jobmate-internal
+    restart: always
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - jobmate-internal
+    restart: always
+
+  # --- MICROSERVICES ---
+  # Note: Les noms des services (keys) ici doivent correspondre 
+  # aux noms dans github.event.repository.name pour que la CI fonctionne.
+  
+  jobmate-auth:
+    image: ghcr.io/ton-orga/jobmate-auth:latest
+    container_name: auth-service
+    networks:
+      - jobmate-internal
+    environment:
+      - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/jobmate
+      - JWT_SECRET=${JWT_SECRET}
+    restart: always
+
+  jobmate-discovery:
+    image: ghcr.io/ton-orga/jobmate-discovery:latest
+    container_name: discovery-service
+    networks:
+      - jobmate-internal
+    environment:
+      - REDIS_URL=redis://redis:6379
+    restart: always
+
+  jobmate-gateway:
+    image: ghcr.io/ton-orga/jobmate-gateway:latest
+    container_name: gateway
+    networks:
+      - jobmate-internal
+    environment:
+      - PORT=4000
+      - AUTH_SERVICE_URL=auth-service:50051
+      - DISCOVERY_SERVICE_URL=discovery-service:50052
+    depends_on:
+      - jobmate-auth
+      - jobmate-discovery
+    labels:
+      - "traefik.enable=true"
+      # Routing API
+      - "traefik.http.routers.gateway.rule=Host(`api.ton-domaine.com`)"
+      - "traefik.http.routers.gateway.entrypoints=websecure"
+      - "traefik.http.routers.gateway.tls.certresolver=myresolver"
+    restart: always
