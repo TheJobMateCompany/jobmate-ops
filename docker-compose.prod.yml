@@ -46,7 +46,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: jobmate
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ../data/postgres:/var/lib/postgresql/data
     networks:
       - jobmate-internal
     restart: always
@@ -55,7 +55,7 @@ services:
     image: redis:alpine
     container_name: redis
     volumes:
-      - redis_data:/data
+      - ../data/redis:/data
     networks:
       - jobmate-internal
     restart: always
