@@ -5,7 +5,7 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  postgres_data:  
   redis_data:
   traefik_letsencrypt:
 
@@ -26,7 +26,7 @@ services:
       # Configuration SSL (Let's Encrypt)
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       # Remplace par ton email !
-      - "--certificatesresolvers.myresolver.acme.email=charmeelvodouhe@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.email=charmeel.vodouhe@epitech.eu"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
