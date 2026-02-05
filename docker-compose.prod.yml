@@ -102,4 +102,5 @@ services:
       - "traefik.http.routers.gateway.rule=Host(`api.meelkyway.com`)"
       - "traefik.http.routers.gateway.entrypoints=websecure"
       - "traefik.http.routers.gateway.tls.certresolver=myresolver"
+      - "traefik.http.services.gateway.loadbalancer.server.port=4000"
     restart: always
